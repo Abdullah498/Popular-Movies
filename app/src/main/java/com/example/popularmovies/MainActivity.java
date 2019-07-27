@@ -4,20 +4,14 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.Toast;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements MoviesAdapter.ListItemClickListener {
@@ -27,11 +21,9 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Lis
     public static MoviesAdapter moviesAdapter;
     int numberOfItems;
     NetworkUtils networkUtils=new NetworkUtils();
-    Button imageView;
+    Button startPage;
 
     static int VISIBILITY;
-
-    static String   url="https://api.themoviedb.org/3/movie/now_playing?api_key=5a4d8ca56550fbd8f8015c4b02a70e71";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,9 +31,11 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Lis
         setContentView(R.layout.activity_main);
 
 
-        imageView=findViewById(R.id.start_page);
+        startPage =findViewById(R.id.start_page);
         if(VISIBILITY==View.GONE)
-            imageView.setVisibility(View.GONE);
+            startPage.setVisibility(View.GONE);
+        else
+            Toast.makeText(this,"tap on screen",Toast.LENGTH_SHORT).show();
 
         recyclerView=findViewById(R.id.rv_movies);
         moviesAdapter=new MoviesAdapter(this,numberOfItems,this);
@@ -49,16 +43,10 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Lis
 
         recyclerView.setLayoutManager(gridLayoutManager);
 
-        //recyclerView.setHasFixedSize(true);
+
         recyclerView.setAdapter(moviesAdapter);
-        Log.i("numberOfItems",Integer.toString(numberOfItems));
         moviesAdapter.notifyDataSetChanged();
 
-    }
-    public void  conectToApi(String url){
-        networkUtils.execute(url);
-        numberOfItems=movies.size();
-        Log.i("numberOfItems",Integer.toString(numberOfItems));
     }
 
     @Override
@@ -93,27 +81,27 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Lis
 
     @Override
     public void onListItemClick(int clickedItemIndex) {
-        Log.i("clickedItemIndex",Integer.toString(clickedItemIndex));
         Intent intent=new Intent(MainActivity.this,DetailActivity.class);
         intent.putExtra(Intent.EXTRA_TEXT,clickedItemIndex);
         startActivity(intent);
     }
 
+
+    //this method make app return to home directly when backButton clicked
    @Override
     public void onBackPressed() {
 
-        Intent startMain = new Intent(Intent.ACTION_MAIN);
-        startMain.addCategory(Intent.CATEGORY_HOME);
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_HOME);
 
-        startActivity(startMain);
+        startActivity(intent);
 
     }
 
     public void startPage(View view) {
-        imageView=findViewById(R.id.start_page);
-        imageView.setVisibility(View.GONE);
+        startPage.setVisibility(View.GONE);
         VISIBILITY=View.GONE;
-       networkUtils.execute("http://api.themoviedb.org/3/movie/now_playing?api_key=5a4d8ca56550fbd8f8015c4b02a70e71");
+        networkUtils.execute("http://api.themoviedb.org/3/movie/now_playing?api_key=5a4d8ca56550fbd8f8015c4b02a70e71");
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
     }
