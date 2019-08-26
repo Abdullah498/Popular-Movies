@@ -1,6 +1,10 @@
 package com.example.popularmovies;
 
+import android.arch.lifecycle.ViewModelProviders;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -8,6 +12,8 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,21 +51,40 @@ public class DetailActivity extends AppCompatActivity {
     TextView averageVote;
     TextView releaseDate;
 
+    Button favouriteBtn;
+
     Toolbar mainTitle;
 
-    int id=0;
-    int numberOfItems;
+    MovieData movieData;
+
+    AppDatabase appDatabase;
+    FavouritesViewModel favouritesViewModel;
+
+    int favFlag=0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
+        appDatabase=AppDatabase.getInstance(this);
+        favouritesViewModel= ViewModelProviders.of(this).get(FavouritesViewModel.class);
+
+        favouriteBtn=findViewById(R.id.favouritesBtn);
+
         mainPosetr = findViewById(R.id.main_poster);
         overview = findViewById(R.id.overview);
         averageVote = findViewById(R.id.averageVote);
         releaseDate = findViewById(R.id.releaseDate);
         mainTitle = findViewById(R.id.main_title);
+
+        String posterPath=getIntent().getStringExtra("posterPath");
+        String title=getIntent().getStringExtra("title");
+        String mOverview=getIntent().getStringExtra("overview");
+        String date=getIntent().getStringExtra("date");
+        String voteAverage=getIntent().getStringExtra("voteAverage");
+        final String movieId=getIntent().getStringExtra("id");
+
 
         Picasso.with(this).load(getIntent().getStringExtra("posterPath")).into(mainPosetr);
 
@@ -70,6 +95,7 @@ public class DetailActivity extends AppCompatActivity {
         releaseDate.setText(getIntent().getStringExtra("date"));
         averageVote.setText(getIntent().getStringExtra("voteAverage"));
 
+        movieData=new MovieData(title,posterPath,mOverview,voteAverage,date,movieId);
 
 
         //trailers
@@ -94,6 +120,47 @@ public class DetailActivity extends AppCompatActivity {
 
 
         recyclerView2.setHasFixedSize(false);
+
+
+
+        //favourites Button
+
+        final SharedPreferences preferences = getSharedPreferences(movieId, Context.MODE_PRIVATE);
+        favFlag = preferences.getInt(movieId, 0);
+
+
+        if (favFlag ==1){
+            favouriteBtn.setBackgroundColor(getResources().getColor(R.color.white));
+            favouriteBtn.setText("Added to favourites".toUpperCase());
+        }
+
+        favouriteBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (favFlag==0){
+                    new AddToFavouriteAsyncTask().execute();
+                    favouriteBtn.setBackgroundColor(getResources().getColor(R.color.white));
+                    favouriteBtn.setText("Added to favourites".toUpperCase());
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putInt(movieId, 1);
+                    editor.apply();
+                    favFlag = 1;
+                }else{
+                    favouritesViewModel.deleteMovie(movieData);
+                    favouriteBtn.setBackgroundResource(R.color.red);
+                    favouriteBtn.setText("Add to favourites".toUpperCase());
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putInt(movieId, 0);
+                    editor.apply();
+                    favFlag = 0;
+                    Toast.makeText(getApplicationContext(), " Movie Deleted From Favourites", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+
+        });
+
+
     }
 
     class TrailersAsyncTask extends AsyncTask<String,Void,ArrayList<MovieData>> {
@@ -252,43 +319,17 @@ public class DetailActivity extends AppCompatActivity {
 
     }
 
-    // trailers
-
-
-      /*  //reviews
-
-
-
-        mainPosetr=findViewById(R.id.main_poster);
-        overview=findViewById(R.id.overview);
-        averageVote=findViewById(R.id.averageVote);
-        releaseDate=findViewById(R.id.releaseDate);
-
-        mainTitle=findViewById(R.id.main_title);
-
-        Intent intent=getIntent();
-        if (intent.hasExtra(Intent.EXTRA_TEXT)) {
-            int index = intent.getIntExtra(Intent.EXTRA_TEXT,0);
-
-            Picasso.with(this).load(MainActivity.movies.get(index).getMoviePosterImage()).into(mainPosetr);
-
-            mainTitle.setTitle(MainActivity.movies.get(index).getOriginalTitle());
-
-            overview.setText(MainActivity.movies.get(index).getOverview());
-            averageVote.setText(MainActivity.movies.get(index).getVoteAverage());
-            releaseDate.setText(MainActivity.movies.get(index).getReleaseDate());
-        }
-        if(intent.hasExtra("reviewId")){
-            id = intent.getIntExtra("reviewId",0);
-            Toast.makeText(this,id+"",Toast.LENGTH_SHORT).show();
-            reviewNetworkUtil.execute("https://api.themoviedb.org/3/movie/"+Integer.toString(id)+"/reviews?api_key=5a4d8ca56550fbd8f8015c4b02a70e71");
-            trailerNetworkUtil.execute("https://api.themoviedb.org/3/movie/"+Integer.toString(id)+"/videos?api_key=5a4d8ca56550fbd8f8015c4b02a70e71");
+    public class AddToFavouriteAsyncTask extends AsyncTask<Void, Void, Void>{
+        @Override
+        protected Void doInBackground(Void... voids) {
+            appDatabase.movieDao().insertMovie(movieData);
+            return null;
         }
 
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            Toast.makeText(getApplicationContext(), "Movie Added To Favourites", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    @Override
-    public void onListItemClick(int clickedItemIndex) {
-       Toast.makeText(this,"Hi",Toast.LENGTH_SHORT).show();
-    }*/
 }

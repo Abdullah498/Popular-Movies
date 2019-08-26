@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -30,19 +31,19 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity{
 
+    String currentUrl;
+
+    ProgressBar progressBar;
     RecyclerView recyclerView;
     public static MoviesAdapter moviesAdapter;
     public ArrayList<MovieData> movies=new ArrayList<>();
-
-    Button startPage;
-
-    static int VISIBILITY;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        progressBar=findViewById(R.id.progress);
 
         recyclerView=findViewById(R.id.rv_movies);
         GridLayoutManager gridLayoutManager =new GridLayoutManager(this,numberOfColumns());
@@ -50,13 +51,12 @@ public class MainActivity extends AppCompatActivity{
         recyclerView.setLayoutManager(gridLayoutManager);
 
         if(!getIntent().hasExtra("pop")){
-
-            Toast.makeText(this,"else",Toast.LENGTH_SHORT).show();
             new MoveisAsyncTask().execute("http://api.themoviedb.org/3/movie/now_playing?api_key=5a4d8ca56550fbd8f8015c4b02a70e71");
+            currentUrl="http://api.themoviedb.org/3/movie/now_playing?api_key=5a4d8ca56550fbd8f8015c4b02a70e71";
         }
         else {
-            Toast.makeText(this,"test",Toast.LENGTH_SHORT).show();
             new MoveisAsyncTask().execute(getIntent().getStringExtra("pop"));
+            currentUrl=getIntent().getStringExtra("pop");
         }
     }
 //Here you can dynamically calculate the number of columns and the layout will adapt to the screen size and orientation
@@ -86,31 +86,30 @@ public class MainActivity extends AppCompatActivity{
                 Intent intent=new Intent(this,MainActivity.class).putExtra("pop","http://api.themoviedb.org/3/movie/popular?api_key=5a4d8ca56550fbd8f8015c4b02a70e71");
                 startActivity(intent);
                 finish();
-                Toast.makeText(this,"Popular",Toast.LENGTH_SHORT).show();
                 break;
             case R.id.sort_by_most_rated:
                 getIntent().putExtra("pop","http://api.themoviedb.org/3/movie/top_rated?api_key=5a4d8ca56550fbd8f8015c4b02a70e71");
                 finish();
-                Toast.makeText(this,"top",Toast.LENGTH_SHORT).show();
                 startActivity(getIntent());
                 break;
 
             case R.id.now_playing:
                 getIntent().putExtra("pop","http://api.themoviedb.org/3/movie/now_playing?api_key=5a4d8ca56550fbd8f8015c4b02a70e71");
                 finish();
-                Toast.makeText(this,"now",Toast.LENGTH_SHORT).show();
                 startActivity(getIntent());
+                break;
+
+            case R.id.sort_by_favourites:
+                this.finish();
+                startActivity(new Intent(this,FavouritesActivity.class).putExtra("currentUrl",currentUrl));
                 break;
 
         }
 
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
-
         return true;
     }
     //this method make app return to home directly when backButton clicked
-   @Override
+   /*@Override
     public void onBackPressed() {
 
         Intent intent = new Intent(Intent.ACTION_MAIN);
@@ -118,10 +117,16 @@ public class MainActivity extends AppCompatActivity{
 
         startActivity(intent);
 
-    }
+    }*/
 
 
     class MoveisAsyncTask extends AsyncTask<String,Void,ArrayList<MovieData>>{
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
 
         @Override
         protected ArrayList<MovieData> doInBackground(String... siteUrl) {
@@ -157,6 +162,9 @@ public class MainActivity extends AppCompatActivity{
 
         @Override
         protected void onPostExecute(ArrayList<MovieData> movieData) {
+
+            progressBar.setVisibility(View.INVISIBLE);
+
             moviesAdapter=new MoviesAdapter(MainActivity.this,movieData);
             recyclerView.setAdapter(moviesAdapter);
             moviesAdapter.notifyDataSetChanged();

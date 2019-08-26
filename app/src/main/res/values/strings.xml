@@ -9,4 +9,5 @@
     <string name="tailerName">Trailer Name</string>
     <string name="movies">movies</string>
     <string name="sort_by_most_favourites">Favourites</string>
+    <string name="Add_to_favourits">Add to favourits</string>
 </resources>

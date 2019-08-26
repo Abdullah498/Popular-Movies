@@ -13,6 +13,7 @@ import android.widget.ImageView;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewHolder> {
 
@@ -58,6 +59,10 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
         return movies.size();
     }
 
+    public void setMovies(List<MovieData> movies) {
+        this.movies= (ArrayList<MovieData>) movies;
+        notifyDataSetChanged();
+    }
 
 
     class MovieViewHolder extends RecyclerView.ViewHolder {
