@@ -6,4 +6,7 @@
     <string name="averageVote">Aevrage Vote : </string>
     <string name="releaseDate">Release Date : </string>
     <string name="now_playing">Now Playing</string>
+    <string name="tailerName">Trailer Name</string>
+    <string name="movies">movies</string>
+    <string name="sort_by_most_favourites">Favourites</string>
 </resources>
